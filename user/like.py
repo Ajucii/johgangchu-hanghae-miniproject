@@ -13,6 +13,7 @@ def find_many(user_id = None, lecture_id = None):
 	db = get_db();
 	query = {"user_id": user_id} if user_id else {"lecture_id": lecture_id}
 	contraint = {"lecture_id": True} if user_id else {"user_id": True}
+	query["like"] = True;
 	ret = db.find(query, contraint);
 	return (ret);
 
