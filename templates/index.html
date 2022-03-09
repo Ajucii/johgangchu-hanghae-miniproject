@@ -1,6 +1,7 @@
 {% extends "base.html"%}
 {%block script%}
 <script>
+login_status = ("{{ login_status }}") == "False" ? false : true;
 function set_liked_lectures() {
 	$.ajax({
 		type: 'GET',
@@ -8,12 +9,11 @@ function set_liked_lectures() {
 		data: {},
 		success: function (response) {
 			if (response["err"]) {
-				window.alert("not login user");
+				console.log("not login user");
 			} else {
-				let user_id = response["_id"]
-				let likes = response["likes"]
+				let user_id = response["_id"];
 				console.log("user_id:", user_id);
-				likes.map(
+				response["likes"].map(
 					(el) => {
 						set_like(el["lecture_id"]);
 					}
@@ -32,8 +32,10 @@ function set_like(lecture_id) {
 }
 
 function like_lecture(like_btn) {
+	if (!login_status)
+		window.location.replace("{{ url_for("user.login") }}");
+	
 	let lecture_id = $(like_btn).data("lecture-id");
-	console.log("like!, ",lecture_id);
 	$.ajax({
 		type: 'GET',
 		url: `/user/like/${lecture_id}/`,
@@ -41,9 +43,9 @@ function like_lecture(like_btn) {
 		},
 		success: function (response) {
 			if (response["err"]) {
-				window.alert("like failed!");
+				console.log("like failed!");
 			} else {
-				window.alert("like success!");
+				console.log("like success!");
 				toggle_like_btn(like_btn, $(like_btn).next());
 			}
 		},
@@ -62,6 +64,9 @@ function toggle_like_btn(to_inactive, to_active)
 }
 
 function unlike_lecture(unlike_btn) {
+	if (!login_status)
+		window.location.replace("{{ url_for("user.login") }}");
+	
 	let lecture_id = $(unlike_btn).data("lecture-id");
 	$.ajax({
 		type: 'GET',
@@ -70,9 +75,9 @@ function unlike_lecture(unlike_btn) {
 		},
 		success: function (response) {
 			if (response["err"]) {
-				window.alert("unlike failed!");
+				console.log("unlike failed!");
 			} else {
-				window.alert("unlike success!");
+				console.log("unlike success!");
 				toggle_like_btn(unlike_btn, $(unlike_btn).prev());
 			}
 		},
@@ -82,35 +87,10 @@ function unlike_lecture(unlike_btn) {
 	});
 }
 
-function get_login_user_info() {
-	$.ajax({
-		type: 'GET',
-		url: "/user/info/",
-		data: {},
-		success: function (response) {
-			if (response["err"]) {
-				window.alert("not login user");
-			} else {
-				let user_id = response["_id"]
-				let likes = response["likes"]
-				console.log("user_id:", user_id);
-				likes.map(
-					(el) => {
-						console.log("user like", el["lecture_id"]
-					)});
-			}
-		},
-		fail: function(...err) {
-			console.log(err);
-		},
-	});
-}
 
-login_status = ("{{ login_status }}")
 $(document).ready(function () {
     // 로그인 된 상태라면
-    if (login_status == "True") {
-		get_login_user_info();
+    if (!login_status) {
         // '로그인'버튼에 is-hidden이라는 클래스를 추가한다
         console.log("로그인 버튼 감추기");
         $("#login_button").addClass("d-none");
@@ -177,8 +157,7 @@ function get_posts(username) {
                         temp_html = temp_html.concat(`<p>작성자 : 익명 유저 </p>`)
                     }
 
-					if (login_status)
-                        temp_html = temp_html.concat(`<button data-lecture-id=${lecture_id} id=${lecture_id} class="like-btn btn btn-secondary active" onclick="like_lecture(this)">찜 하기</button>
+					temp_html = temp_html.concat(`<button data-lecture-id=${lecture_id} id=${lecture_id} class="like-btn btn btn-secondary active" onclick="like_lecture(this)">찜 하기</button>
 <button data-lecture-id=${lecture_id} class="unlike-btn btn btn-primary d-none" onclick="unlike_lecture(this)">찜 해제하기</button>
 </p>
 `)
