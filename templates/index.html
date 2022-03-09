@@ -1,6 +1,36 @@
 {% extends "base.html"%}
 {%block script%}
 <script>
+function set_liked_lectures() {
+	$.ajax({
+		type: 'GET',
+		url: "/user/info/",
+		data: {},
+		success: function (response) {
+			if (response["err"]) {
+				window.alert("not login user");
+			} else {
+				let user_id = response["_id"]
+				let likes = response["likes"]
+				console.log("user_id:", user_id);
+				likes.map(
+					(el) => {
+						set_like(el["lecture_id"]);
+					}
+				);
+			}
+		},
+		fail: function(...err) {
+			console.log(err);
+		},
+	});
+}
+
+function set_like(lecture_id) {
+	let like_btn = $(`#${lecture_id}`);
+	toggle_like_btn(like_btn, like_btn.next());
+}
+
 function like_lecture(like_btn) {
 	let lecture_id = $(like_btn).data("lecture-id");
 	console.log("like!, ",lecture_id);
@@ -14,7 +44,7 @@ function like_lecture(like_btn) {
 				window.alert("like failed!");
 			} else {
 				window.alert("like success!");
-				get_login_user_info();
+				toggle_like_btn(like_btn, $(like_btn).next());
 			}
 		},
 		fail: function(...err) {
@@ -23,11 +53,19 @@ function like_lecture(like_btn) {
 	});
 }
 
+function toggle_like_btn(to_inactive, to_active)
+{
+	$(to_inactive).removeClass("active")
+	$(to_inactive).addClass("d-none")
+	$(to_active).removeClass("d-none")
+	$(to_active).addClass("active")
+}
+
 function unlike_lecture(unlike_btn) {
 	let lecture_id = $(unlike_btn).data("lecture-id");
 	$.ajax({
 		type: 'GET',
-		url: `/user/like/${lecture_id}/`,
+		url: `/user/unlike/${lecture_id}/`,
 		data: {
 		},
 		success: function (response) {
@@ -35,7 +73,7 @@ function unlike_lecture(unlike_btn) {
 				window.alert("unlike failed!");
 			} else {
 				window.alert("unlike success!");
-				get_login_user_info();
+				toggle_like_btn(unlike_btn, $(unlike_btn).prev());
 			}
 		},
 		fail: function(...err) {
@@ -115,8 +153,6 @@ function get_posts(username) {
                     let category = rows[i]['category']
                     let author_id = rows[i]['author_id']
                     let lecture_id = rows[i]['_id']
-
-
                     let temp_html = `<div class="col">
                                     <div class="card h-95">
                                         <div onclick="window.open('${url}') " style="cursor:pointer" target="_blank">
@@ -142,8 +178,8 @@ function get_posts(username) {
                     }
 
 					if (login_status)
-                        temp_html = temp_html.concat(`<button data-lecture-id=${lecture_id} class="btn btn-secondary active" onclick="like_lecture(this)">찜 하기</button>
-<button data-lecture-id=${lecture_id} class="btn btn-primary d-none" onclick="unlike_lecture(this)">찜 해제하기</button>
+                        temp_html = temp_html.concat(`<button data-lecture-id=${lecture_id} id=${lecture_id} class="like-btn btn btn-secondary active" onclick="like_lecture(this)">찜 하기</button>
+<button data-lecture-id=${lecture_id} class="unlike-btn btn btn-primary d-none" onclick="unlike_lecture(this)">찜 해제하기</button>
 </p>
 `)
                     temp_html = temp_html.concat(`</div></div></div>`)
@@ -152,6 +188,8 @@ function get_posts(username) {
                     $('#cards-box').append(temp_html)
 
                 }
+				if (login_status)
+					set_liked_lectures();
             }
         })
     }
