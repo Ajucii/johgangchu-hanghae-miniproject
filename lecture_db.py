@@ -14,9 +14,14 @@ def save_lecture(lecture_doc):
 
 def get_lecture_list(msg):
 	lecture_doc = {};
-	all_lecture = (db.lectures.find(lecture_doc, {"_id" : False}));
-	all_lecture = map(lambda el: el.update({"_id": str(el["_id"])), all_lecture);
-	return jsonify({"msg":msg ,"lectures": list(all_lecture)});
+	all_lecture = list(db.lectures.find(lecture_doc));
+	list(
+		map(
+			lambda el: el.update({"_id": str(el["_id"])}),
+			all_lecture
+		)
+	);
+	return jsonify({"msg":msg ,"lectures":all_lecture});
 
 
 def get_front_list(msg):
