@@ -1,43 +1,23 @@
 {% extends "base.html"%}
 {%block script%}
 <script>
-function like(lecture_id) {
-	$.ajax({
-		type: 'POST',
-		url: `/user/like/${lectuer_id}`,
-		data: {
-		},
-		success: function (response) {
-			if (response["err"]) {
-				window.alert("like failed!");
-			} else {
-				window.alert("like success!");
-				get_user_info();
-			}
-		},
-		fail: function(...err) {
-			console.log(err);
-		},
-	});
-}
-
-
-function get_login_user_info() {
+login_status = ("{{ login_status }}") == "False" ? false : true;
+function set_liked_lectures() {
 	$.ajax({
 		type: 'GET',
 		url: "/user/info/",
 		data: {},
 		success: function (response) {
 			if (response["err"]) {
-				window.alert("not login user");
+				console.log("not login user");
 			} else {
-				let user_id = response["_id"]
-				let likes = response["likes"]
+				let user_id = response["_id"];
 				console.log("user_id:", user_id);
-				likes.map(
+				response["likes"].map(
 					(el) => {
-						console.log("user like", el["lecture_id"]
-					)});
+						set_like(el["lecture_id"]);
+					}
+				);
 			}
 		},
 		fail: function(...err) {
@@ -46,11 +26,71 @@ function get_login_user_info() {
 	});
 }
 
-login_status = ("{{ login_status }}")
+function set_like(lecture_id) {
+	let like_btn = $(`#${lecture_id}`);
+	toggle_like_btn(like_btn, like_btn.next());
+}
+
+function like_lecture(like_btn) {
+	if (!login_status)
+		window.location.replace("{{ url_for("user.login") }}");
+	
+	let lecture_id = $(like_btn).data("lecture-id");
+	$.ajax({
+		type: 'GET',
+		url: `/user/like/${lecture_id}/`,
+		data: {
+		},
+		success: function (response) {
+			if (response["err"]) {
+				console.log("like failed!");
+			} else {
+				console.log("like success!");
+				toggle_like_btn(like_btn, $(like_btn).next());
+			}
+		},
+		fail: function(...err) {
+			console.log(err);
+		},
+	});
+}
+
+function toggle_like_btn(to_inactive, to_active)
+{
+	$(to_inactive).removeClass("active")
+	$(to_inactive).addClass("d-none")
+	$(to_active).removeClass("d-none")
+	$(to_active).addClass("active")
+}
+
+function unlike_lecture(unlike_btn) {
+	if (!login_status)
+		window.location.replace("{{ url_for("user.login") }}");
+	
+	let lecture_id = $(unlike_btn).data("lecture-id");
+	$.ajax({
+		type: 'GET',
+		url: `/user/unlike/${lecture_id}/`,
+		data: {
+		},
+		success: function (response) {
+			if (response["err"]) {
+				console.log("unlike failed!");
+			} else {
+				console.log("unlike success!");
+				toggle_like_btn(unlike_btn, $(unlike_btn).prev());
+			}
+		},
+		fail: function(...err) {
+			console.log(err);
+		},
+	});
+}
+
+
 $(document).ready(function () {
     // 로그인 된 상태라면
-    if (login_status == "True") {
-		get_login_user_info();
+    if (!login_status) {
         // '로그인'버튼에 is-hidden이라는 클래스를 추가한다
         console.log("로그인 버튼 감추기");
         $("#login_button").addClass("d-none");
@@ -92,8 +132,7 @@ function get_posts(username) {
                     let image = rows[i]['image']
                     let category = rows[i]['category']
                     let author_id = rows[i]['author_id']
-
-
+                    let lecture_id = rows[i]['_id']
                     let temp_html = `<div class="col">
                                     <div class="card h-95">
                                         <div onclick="window.open('${url}') " style="cursor:pointer" target="_blank">
@@ -107,7 +146,9 @@ function get_posts(username) {
                     if (author_id) {
 
 						{% if login_status %}
-                        temp_html = temp_html.concat(`<p>작성자 : {{username}}</p>`)
+                        temp_html = temp_html.concat(`<p>작성자 : {{author_id}}</p>
+`)
+								
 						{% else %}
                         temp_html = temp_html.concat(`<p>작성자 : ${author_id}</p>`)
 						{% endif %}
@@ -115,12 +156,19 @@ function get_posts(username) {
                     } else {
                         temp_html = temp_html.concat(`<p>작성자 : 익명 유저 </p>`)
                     }
+
+					temp_html = temp_html.concat(`<button data-lecture-id=${lecture_id} id=${lecture_id} class="like-btn btn btn-secondary active" onclick="like_lecture(this)">찜 하기</button>
+<button data-lecture-id=${lecture_id} class="unlike-btn btn btn-primary d-none" onclick="unlike_lecture(this)">찜 해제하기</button>
+</p>
+`)
                     temp_html = temp_html.concat(`</div></div></div>`)
 
 
                     $('#cards-box').append(temp_html)
 
                 }
+				if (login_status)
+					set_liked_lectures();
             }
         })
     }

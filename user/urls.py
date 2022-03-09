@@ -9,7 +9,7 @@ from .auth import (
 	gen_hashpw,  check_password, set_response_cookie, unset_reponse_cookie, check_input_valid, get_request_cookie, decode_token, create_token, get_user_id_name_email
 )
 from .decorators import login_required, logout_required
-from .like import do_like
+from .like import do_like, un_like
 
 bp = Blueprint('user', __name__, template_folder='templates');
 
@@ -69,15 +69,28 @@ def detail():
 	if auth_token:
 		user_id, user_name, user_email = get_user_id_name_email(request)
 		user_likes = list(find_likes(user_id = user_id)); 
+		list(map(lambda el: el.update({"_id": str(el["_id"])}), user_likes));
 		return jsonify({"_id": user_id, "email": user_email, "name": user_name, "likes": user_likes});
 	else:
 		return jsonify({"err":True, "msg": "invalid_token!"});
 
-@bp.route("like/<lecture_id>/", methods=["GET","POST"])
+@bp.route("like/<lecture_id>/", methods=["GET"])
 @login_required
-def like_toggle(lecture_id):
+def like_lecture(lecture_id):
 	user_id, _, _  = get_user_id_name_email(request)
+	print(user_id);
 	ret = do_like(user_id, lecture_id);
+	print(ret);
+	if ret:
+		return (jsonify({"msg": "success"}));
+	return (jsonify({"msg": "failed", "err": True}));
+
+@bp.route("unlike/<lecture_id>/", methods=["GET"])
+@login_required
+def unlike_lecture(lecture_id):
+	user_id, _, _  = get_user_id_name_email(request)
+	ret = un_like(user_id, lecture_id);
+	print(ret);
 	if ret:
 		return (jsonify({"msg": "success"}));
 	return (jsonify({"msg": "failed", "err": True}));
