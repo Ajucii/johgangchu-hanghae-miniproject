@@ -1,10 +1,12 @@
 {% extends "base.html"%}
 {%block script%}
 <script>
-function like(lecture_id) {
+function like_lecture(like_btn) {
+	let lecture_id = $(like_btn).data("lecture-id");
+	console.log("like!, ",lecture_id);
 	$.ajax({
-		type: 'POST',
-		url: `/user/like/${lectuer_id}`,
+		type: 'GET',
+		url: `/user/like/${lecture_id}/`,
 		data: {
 		},
 		success: function (response) {
@@ -12,7 +14,7 @@ function like(lecture_id) {
 				window.alert("like failed!");
 			} else {
 				window.alert("like success!");
-				get_user_info();
+				get_login_user_info();
 			}
 		},
 		fail: function(...err) {
@@ -21,6 +23,26 @@ function like(lecture_id) {
 	});
 }
 
+function unlike_lecture(unlike_btn) {
+	let lecture_id = $(unlike_btn).data("lecture-id");
+	$.ajax({
+		type: 'GET',
+		url: `/user/like/${lecture_id}/`,
+		data: {
+		},
+		success: function (response) {
+			if (response["err"]) {
+				window.alert("unlike failed!");
+			} else {
+				window.alert("unlike success!");
+				get_login_user_info();
+			}
+		},
+		fail: function(...err) {
+			console.log(err);
+		},
+	});
+}
 
 function get_login_user_info() {
 	$.ajax({
@@ -92,6 +114,7 @@ function get_posts(username) {
                     let image = rows[i]['image']
                     let category = rows[i]['category']
                     let author_id = rows[i]['author_id']
+                    let lecture_id = rows[i]['_id']
 
 
                     let temp_html = `<div class="col">
@@ -107,7 +130,9 @@ function get_posts(username) {
                     if (author_id) {
 
 						{% if login_status %}
-                        temp_html = temp_html.concat(`<p>작성자 : {{username}}</p>`)
+                        temp_html = temp_html.concat(`<p>작성자 : {{author_id}}</p>
+`)
+								
 						{% else %}
                         temp_html = temp_html.concat(`<p>작성자 : ${author_id}</p>`)
 						{% endif %}
@@ -115,6 +140,12 @@ function get_posts(username) {
                     } else {
                         temp_html = temp_html.concat(`<p>작성자 : 익명 유저 </p>`)
                     }
+
+					if (login_status)
+                        temp_html = temp_html.concat(`<button data-lecture-id=${lecture_id} class="btn btn-secondary active" onclick="like_lecture(this)">찜 하기</button>
+<button data-lecture-id=${lecture_id} class="btn btn-primary d-none" onclick="unlike_lecture(this)">찜 해제하기</button>
+</p>
+`)
                     temp_html = temp_html.concat(`</div></div></div>`)
 
 

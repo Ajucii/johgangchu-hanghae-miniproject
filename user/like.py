@@ -7,21 +7,6 @@ def get_db():
 	db = client["dbsparta"];
 	return (db.likes);
 
-def do_like(user_id, lecture_id):
-	if not all([user_id, lecture_id]):
-		return None;
-
-	db = get_db();
-	find_query = {"user_id": user_id, "lecture_id": lecture_id};
-	
-	if db.find_one(query):
-		ret = db.update_one(find_query, {"like": {"$set": True}});
-		return (ret);
-	query = find_query;
-	query["like"] = True;
-	ret = db.insert_one(query);
-	return (ret.inserted_id);
-
 def find_many(user_id = None, lecture_id = None):
 	if not any([user_id, lecture_id]):
 		return None;
@@ -31,11 +16,27 @@ def find_many(user_id = None, lecture_id = None):
 	ret = db.find(query, contraint);
 	return (ret);
 
-def	unlike(user_id, lecture_id):
+def do_like(user_id, lecture_id):
+	if not all([user_id, lecture_id]):
+		return None;
+
+	db = get_db();
+	find_query = {"user_id": user_id, "lecture_id": lecture_id};
+	
+	if db.find_one(find_query):
+		ret = db.update_one(find_query, {"$set": {"like": True}});
+		return (ret);
+	update_query = find_query;
+	update_query["like"] = True;
+	print(update_query);
+	ret = db.insert_one(update_query);
+	return (ret.inserted_id);
+
+def	un_like(user_id, lecture_id):
 	if not all([user_id, lecture_id]):
 		return None;
 	db = get_db();
 	query = {"user_id": user_id, "lecture_id": lecture_id, "like": True};
-	ret = db.update_one(query, {"like": {"$set": False}});
-	return (ret.inserted_id);
-	
+	ret = db.update_one(query, {"$set": {"like": False}});
+	return (ret);
+
