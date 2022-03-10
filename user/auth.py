@@ -55,7 +55,7 @@ def is_email_valid(email):
 		if all([username_valid, domain_valid]):
 			return (True);
 	except Exception:
-			return (False);	
+			return (False);
 	return (False);
 
 def is_domain_valid(domain):
@@ -63,7 +63,7 @@ def is_domain_valid(domain):
 		domain_name, *domain_end  = domain.split(".");
 		if (domain_end[-1] in ["com", "net", "kr"]) and len(domain_name) > 2:
 			return True;
-	except Exception:	
+	except Exception:
 		return False;
 	return False;
 
