@@ -13,7 +13,7 @@ app.register_blueprint(bp_lecture);
 def home():
 	user_name = "방문객"
 	login_status = False
-	if get_request_cookie(request):	
+	if get_request_cookie(request):
 		user_id, user_name, user_email = get_user_id_name_email(request);
 		login_status = True;
 
